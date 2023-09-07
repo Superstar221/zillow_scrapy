@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th,
+    td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .button {
+      background-color: transparent;
+      border: none;
+      font-size: 1rem;
+    }
+    .result {
+      display: none;
+    }
+    
+  </style>
+</head>
+<body>
+  <!-- //=>>Form  -->
+  <div class="container mt-5">
+    <div id="inputFields" style="display:block">
+      <h1>Real Estate Search</h1>
+        <div class="mb-3">
+            <label for="taskName" class="form-label">Set Task Name</label>
+            <input type="text" class="form-control" id="taskName" placeholder="Enter task name" value="test">
+        </div>
+        <div class="mb-3">
+            <label for="address" class="form-label">Put in a Google Address/Location</label>
+            <input type="text" class="form-control" id="address" placeholder="Enter address" value="charlotte">
+        </div>
+        <div class="mb-3">
+          <label for="period" class="form-label">Period</label>
+          <input type="number" class="form-control" id="period" placeholder="Enter period" value="100">
+      </div>
+        <div class="mb-3">
+            <label for="radius" class="form-label">Radius (in mi)</label>
+            <input type="number" class="form-control" id="radius" placeholder="Enter radius" value="500">
+        </div>
+        <div class="row">
+            <div class="col">
+                <label for="minLotSize" class="form-label">Minimum Lot Size</label>
+                <input type="number" class="form-control" id="minLotSize" placeholder="Min lot size" value="0">
+            </div>
+            <div class="col">
+                <label for="maxLotSize" class="form-label">Maximum Lot Size</label>
+                <input type="number" class="form-control" id="maxLotSize" placeholder="Max lot size" value="100000">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <label for="minBedroomsCount" class="form-label">Minimum Bedrooms Count</label>
+                <input type="number" class="form-control" id="minBedroomsCount" placeholder="Min Bedrooms Count" value="1">
+            </div>
+            <div class="col">
+                <label for="maxBedroomsCount" class="form-label">Maximum Bedrooms Count</label>
+                <input type="number" class="form-control" id="maxBedroomsCount" placeholder="Max Bedrooms Count" value="5">
+            </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col">
+              <label for="minBathroomsCount" class="form-label">Minimum Bathrooms Count</label>
+              <input type="number" class="form-control" id="minBathroomsCount" placeholder="Min Bathrooms Count" value="1">
+          </div>
+          <div class="col">
+              <label for="maxBathroomsCount" class="form-label">Maximum Bathrooms Count</label>
+              <input type="number" class="form-control" id="maxBathroomsCount" placeholder="Max Bathrooms Count" value="5">
+          </div>
+      </div>
+        <div class="mb-3 mt-3">
+            <label for="constructionCost" class="form-label">Construction Costs per Sq. Foot</label>
+            <input type="number" class="form-control" id="constructionCost" placeholder="Enter construction cost" value="1000">
+        </div>
+        <div class="mb-3">
+            <label for="maxLotCoverage" class="form-label">Max Lot Coverage</label>
+            <input type="number" class="form-control" id="maxLotCoverage" placeholder="Enter max lot coverage" value="50">
+        </div>
+        <div class="mb-3">
+            <label for="houseType" class="form-label">Home Type</label>
+            <div class="checkbox-group">
+              <input type="checkbox" id="multi-family" name="houseType" value="multi-family" checked>
+              <label for="multi-family">Multi-Family</label>
+              &nbsp;&nbsp;&nbsp;
+              <input type="checkbox" id="single-family" name="houseType" value="single-family" checked>
+              <label for="single-family">Single Family</label>
+            </div>
+        </div>  
+        <button id="getDataButton" onclick="getData()" class="btn btn-primary">Search</button>
+      </div>
+      <div id="result" style="display: none;">
+        <button id="searchAgainButton" onclick="hideData()" class="btn btn-primary float-end">Search Again</button>
+        <h1>Real Estate Search For Sale</h1>
+        <button id="button" class="button"></button><br><br>
+        <button id="averagesoldprice" class="button"></button><br><br>
+        <button id="averagedayonmarket" class="button"></button><br><br>
+        <button id="minprice" class="button"></button><br><br>
+        <button id="mean" class="button">Mean :0</button><br><br>
+        <button id="median" class="button">Median :0</button><br><br>
+        <button id="differenceSqftScale" class="button">Difference Sqft Scale :0</button><br><br>
+        <button id="profitPerSquareFoot" class="button">Potential profit per square foot :0</button><br><br>
+        <table id="propertyTable">
+          <tr>
+            <th>Type</th>
+            <th>image</th>
+            <th>price</th>
+            <th>Address</th>
+            <th>Area(SF)</th>
+            <th>Days online</th>
+            <th>Zillow Links</th>
+            <th>Price/SF</th>
+            <!-- Add more headers for additional properties -->
+          </tr>
+        </table>
+      </div>
+</div>
+<!-- /// End //// -->
+  <!-- <script src="data.js"></script> -->
+  <script>
+
+    //Hide Data
+    function hideData(){
+      inputFields.style.display="block";
+      location.reload()
+    }
+    async function getData() {
+      if(document.getElementById('getDataButton').innerText === 'Searching'){
+        alert("Now Searching... Please Wait.");
+        return;
+      } 
+      var inputFields = document.getElementById('inputFields');
+      var results = document.getElementById('result');
+      var getDataButton = document.getElementById('getDataButton');
+      var listResults;
+      var address =  document.getElementById('address').value;
+      var period = document.getElementById('period').value;
+      var radius = document.getElementById('radius').value;
+      var min_lot_size = document.getElementById('minLotSize').value;
+      var max_lot_size = document.getElementById('maxLotSize').value;
+      var min_bed = document.getElementById('minBedroomsCount').value;
+      var max_bed = document.getElementById('maxBedroomsCount').value;
+      var min_bath = document.getElementById('minBathroomsCount').value;
+      var max_bath = document.getElementById('maxBathroomsCount').value;
+      var construction_cost_per_sqft = document.getElementById('constructionCost').value;
+      var max_lot_coverage = document.getElementById('maxLotCoverage').value;
+      var multi_family = document.getElementById('multi-family').checked;
+      var single_family = document.getElementById('single-family').checked;
+      var address = document.getElementById('address').value;
+      var averagesoldpricepersf = 0;
+      var dayonzillow = [];
+      var soldHouse = [];
+      const api_key = 'c0645ace-1c65-4ba3-92e3-4608bbd682ec';
+      if (address !== '') {
+        //Get Cordinates and boundries from adress name
+        var mapApiEndpoint = `https://geocode.maps.co/search?q=${address}`;
+        var responsemap = await fetch(mapApiEndpoint);
+        var datamap = await responsemap.json();
+        const latitude = parseInt(datamap[0]?.lat);
+        const longitude = parseInt(datamap[0]?.lon);
+
+      // Step 2: Calculate bounding box around the coordinates
+      const earthRadius = 6371; // Earth's radius in kilometers
+      const radiusKm = radius * 1.60934; // Convert miles to kilometers
+      const latDegPerPixel = 360 / (2 * Math.PI * earthRadius);
+      const lonDegPerPixel = latDegPerPixel / Math.cos(latitude * (Math.PI / 180));
+      
+      const map_north = latitude + (radiusKm * latDegPerPixel);
+      const map_south = latitude - (radiusKm * latDegPerPixel);
+      const map_east = longitude + (radiusKm * lonDegPerPixel);
+      const map_west = longitude - (radiusKm * lonDegPerPixel);
+        /////////////////// End  ///////////////////////
+        getDataButton.textContent="Searching"
+        const apiEndpointSale =`https://app.scrapeak.com/v1/scrapers/zillow/listing?api_key=${api_key}&url=https://www.zillow.com/${address}/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${address}%22%2C%22mapBounds%22%3A%7B%22west%22%3A${map_west}%2C%22east%22%3A${map_east}%2C%22south%22%3A${map_south}%2C%22north%22%3A${map_north}%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22lot%22%3A%7B%22min%22%3A${min_lot_size}%2C%22max%22%3A${max_lot_size}%7D%2C%22beds%22%3A%7B%22min%22%3A${min_bed}%2C%22max%22%3A${max_bed}%7D%2C%22baths%22%3A%7B%22min%22%3A${min_bath}%2C%22max%22%3A${max_bath}%7D%2C%22lotCoverage%22%3A%7B%22max%22%3A${max_lot_coverage}%7D` + (single_family ? '' : `%2C%22sf%22%3A%7B%22value%22%3Afalse%7D`) + (multi_family ? '' : `%2C%22mf%22%3A%7B%22value%22%3Afalse%7D`) + `%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%22${period}%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D`;
+
+        const apiEndpointSold =`https://app.scrapeak.com/v1/scrapers/zillow/listing?api_key=${api_key}&url=https://www.zillow.com/${address}/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${address}%22%2C%22mapBounds%22%3A%7B%22west%22%3A${map_west}%2C%22east%22%3A${map_east}%2C%22south%22%3A${map_south}%2C%22north%22%3A${map_north}%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22lot%22%3A%7B%22min%22%3A${min_lot_size}%2C%22max%22%3A${max_lot_size}%7D%2C%22beds%22%3A%7B%22min%22%3A${min_bed}%2C%22max%22%3A${max_bed}%7D%2C%22baths%22%3A%7B%22min%22%3A${min_bath}%2C%22max%22%3A${max_bath}%7D%2C%22lotCoverage%22%3A%7B%22max%22%3A${max_lot_coverage}%7D` + (single_family ? '' : `%2C%22sf%22%3A%7B%22value%22%3Afalse%7D`) + (multi_family ? '' : `%2C%22mf%22%3A%7B%22value%22%3Afalse%7D`) + `%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22rs%22%3A%7B%22value%22%3Atrue%7D%2C%22fsba%22%3A%7B%22value%22%3Afalse%7D%2C%22fsbo%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22cmsn%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%22${period}%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D`;
+
+        try {
+          const response = await fetch(apiEndpointSale);
+          const data = await response.json();
+          const response1 = await fetch(apiEndpointSold);
+          const data1 = await response1.json();
+          averagesoldpricepersf = 0;
+          dayonzillow = [];
+          if ((data.data && data.data.cat1) || (data1.data && data1.data.cat1)) {
+            listResults = data.data.cat1.searchResults.relaxedResults.length> 0?data.data.cat1.searchResults.relaxedResults : data.data.cat1.searchResults.mapResults;
+            soldHouse = data1.data.cat1.searchResults.relaxedResults.length> 0?data1.data.cat1.searchResults.relaxedResults : data1.data.cat1.searchResults.listResults;
+            
+            soldHouse.map((item) => {
+              listResults.push(item);
+            })
+            console.log(listResults.map(item => item.hdpData?.homeInfo.price));
+            console.log(listResults);
+            listResults.sort((b, a) => a.hdpData.homeInfo.price - b.hdpData.homeInfo.price);
+            // Your data processing logic here
+            // Fetch data from the API
+            //Show Data Result and hide input
+            inputFields.style.display="none";
+            results.style.display="block";
+            getDataButton.textContent="Search"
+            function findPrice(records, minOrMax) {
+              if (records.length === 0) {
+                alert("Data not found");
+                return null; // Return null if the array is empty
+              }
+              let targetPrice = records[0].hdpData.homeInfo.price;
+              let targetProperty = records[0];
+              for (let i = 1; i < records.length; i++) {
+                if (records[i].hasOwnProperty('unformattedPrice') && typeof records[i].hdpData.homeInfo.price === 'number') {
+                  if ((minOrMax === "maxsold" && records[i].hdpData.homeInfo.price > targetPrice && records[i].statusType === "SOLD") ||
+                  (minOrMax === "max" && records[i].hdpData.homeInfo.price > targetPrice ) ||
+                    (minOrMax === "min" && records[i].hdpData.homeInfo.price < targetPrice)) {
+                    targetPrice = records[i].hdpData.homeInfo.price;
+                    targetProperty = records[i];
+                  }
+                }
+              }
+              return targetProperty;
+            }
+            //Extract number from String Function
+            function extractNumberFromString(inputString) {
+              console.log(inputString);
+              const convertedNumber = parseFloat(inputString.replace(/[^0-9\.]/g, ""));
+              if (!isNaN(convertedNumber)) {
+                return convertedNumber;
+              }
+              return null; // Return null if no number is found or if the conversion fails
+            }
+            //End Extract number from String Function
+            const maxSoldRecord = findPrice(listResults, "maxsold");
+            const maxRecord = findPrice(listResults, "max");
+            const minRecord = findPrice(listResults, "min");
+            const maxPrice = maxRecord?.hdpData.homeInfo.price || "N/A";
+            const minPrice = minRecord?.hdpData.homeInfo.price || "N/A";
+            const differenceSqftScale = (maxRecord.area || (maxRecord?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? maxRecord?.hdpData?.homeInfo.lotAreaValue : maxRecord?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0)) - (minRecord.area || (minRecord?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? minRecord?.hdpData?.homeInfo.lotAreaValue : minRecord?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0))  || "N/A";
+            //const differenceSqftScale = '123'
+            //Calculate mean
+            function calculateMeanPrice(properties) {
+              if (properties.length === 0) {
+                return null; // Return null if the array is empty
+              }
+              const sum = properties.reduce((accumulator, property) => accumulator + property.hdpData.homeInfo.price, 0);
+              const meanPrice = sum / properties.length;
+              return meanPrice.toFixed(0);
+            }
+            const meanPrice = calculateMeanPrice(soldHouse);
+            //Calculate Median
+            function calculateMedianPrice(properties) {
+              if (properties.length === 0) {
+                return null; // Return null if the array is empty
+              }
+              const sortedPrices = properties.map(property => property.hdpData.homeInfo.price).sort((a, b) => a - b);
+              const middleIndex = Math.floor(sortedPrices.length / 2);
+              const medianPrice = sortedPrices.length % 2 === 0
+                ? (sortedPrices[middleIndex - 1] + sortedPrices[middleIndex]) / 2
+                : sortedPrices[middleIndex];
+              return medianPrice;
+            }
+            const medianPrice = calculateMedianPrice(soldHouse);
+            // calculate potential profit per square foot
+            function calculatePotentialProfit(property) {
+              const costPrice = 90000; // Replace with the actual cost price
+              if (!property.hdpData.homeInfo.price || isNaN(property.hdpData.homeInfo.price) || property.area === null || isNaN(property.area)) {
+                return null;
+              }
+              const potentialProfit = property.hdpData.homeInfo.price - costPrice;
+              return potentialProfit;
+            }
+            function calculateProfitPerSquareFoot(property) {
+              const potentialProfit = calculatePotentialProfit(property);
+              if (potentialProfit === null || property.area === null) {
+                return null;
+              }
+              const profitPerSquareFoot = potentialProfit / property.area;
+              return profitPerSquareFoot;
+            }
+            for (const property of listResults) {
+              const profitPerSquareFoot = calculateProfitPerSquareFoot(property);
+              if (profitPerSquareFoot !== null) {
+                var profitPerSquareFoo = profitPerSquareFoot.toFixed(2);
+              } else {
+                console.log(`Property ${property.zpid}: Data missing, cannot calculate profit per sqft`);
+              }
+            }
+            document.getElementById('button').innerText = "Where the Most Expensive Sold House : " + maxSoldRecord.address + ", Price is " + maxSoldRecord.hdpData.homeInfo.price + ".";
+            document.getElementById('minprice').innerText = "The Cheapest House : " + minRecord.address + ', Difference between the highest is ' + (maxPrice - minPrice);
+            document.getElementById('mean').innerText = "Mean Price of Sold Houses: " + meanPrice;
+            document.getElementById('median').innerText = "Median Price of Sold Houses: " + medianPrice;
+            document.getElementById('differenceSqftScale').innerText = "Difference Sqft Scale between the most expensive and the cheapeast(Potential Sq Footage)) : " + differenceSqftScale;
+            ///Show data in table ////////////
+            // Function to populate the table
+            function average(array) {
+                let sum = array.reduce((acc, val) => acc + val, 0);
+                return sum / array.length;
+            }
+            function populateTable(data) {
+              const table = document.getElementById("propertyTable");
+              data.forEach((property) => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const image = document.createElement("img");
+                image.src = property.imgSrc;
+                image.alt = "Property Image";
+                image.style.width = "100px"; // Adjust image size as needed
+                cell2.appendChild(image);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                const cell5 = row.insertCell(4);
+                const cell6 = row.insertCell(5);
+                const cell7 = row.insertCell(6);
+                const cell8 = row.insertCell(7);
+                cell1.innerHTML = property?.statusType || "N/A";
+                // cell2.innerHTML = property.imgSrc;
+                cell3.innerHTML = property.price || property.soldPrice || "N/A";
+                cell4.innerHTML = property.address || "N/A";
+               // cell5.innerHTML = property.hdpData?.homeInfo?.lotAreaValue+" "+property.hdpData?.homeInfo?.lotAreaUnit || 'N/A';
+               cell5.innerHTML = property.area || (property?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? property?.hdpData?.homeInfo.lotAreaValue : property?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0) || 'N/A;'
+                cell6.innerHTML = property.variableData?.text || 'N/A';
+                cell7.innerHTML = (property.detailUrl.startsWith("/") ? ("https://www.zillow.com" + property.detailUrl) : property.detailUrl) || 'N/A';
+                const pricepersf = ((property.hdpData.homeInfo.price) / (property.area || (property?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? property?.hdpData?.homeInfo.lotAreaValue : property?.hdpData?.homeInfo.lotAreaValue * 43560))).toFixed(0);
+                averagesoldpricepersf += Number(pricepersf);
+                if(property.timeOnZillow) dayonzillow.push(Number(property.timeOnZillow));
+                cell8.innerHTML =  pricepersf || 'N/A';
+                console.log(property.timeOnZillow);
+              });
+              
+            averagesoldpricepersf /= data.length;
+            document.getElementById('averagesoldprice').innerText = "Average Sold Price per SQ Ft : " + (averagesoldpricepersf.toFixed(0) || 'N/A');
+            document.getElementById('averagedayonmarket').innerText = "Average days on market : " +  Math.floor(average(dayonzillow) / (1000 * 60 * 60 * 24))
+            document.getElementById('profitPerSquareFoot').innerText = "Potential profit per square foot : " + (averagesoldpricepersf.toFixed(0) - construction_cost_per_sqft);
+
+            }
+            // Call the function to populate the table
+            alert(listResults.length);
+            populateTable(listResults);
+            
+          } else {
+            console.error('Invalid API response format');
+          }
+        } catch (error) {
+
+          console.error('Error fetching data:', error);
+        }
+      } else {
+        alert('Please Enter address');
+      }
+    }
+  </script>
+</body>
+</html>
