@@ -156,51 +156,53 @@
       var multi_family = document.getElementById('multi-family').checked;
       var single_family = document.getElementById('single-family').checked;
       var address = document.getElementById('address').value;
-      var averagesoldpricepersf = 0;
+      var soldpricepersf = [];
       var dayonzillow = [];
-      var soldHouse = [];
-      const api_key = 'c0645ace-1c65-4ba3-92e3-4608bbd682ec';
+      const api_key = '2d4ed743-817c-4bcc-a4bf-0044e6be5086';
       if (address !== '') {
         //Get Cordinates and boundries from adress name
         var mapApiEndpoint = `https://geocode.maps.co/search?q=${address}`;
         var responsemap = await fetch(mapApiEndpoint);
         var datamap = await responsemap.json();
-        const latitude = parseInt(datamap[0]?.lat);
-        const longitude = parseInt(datamap[0]?.lon);
+        const latitude = parseFloat(datamap[0]?.lat);
+        const longitude = parseFloat(datamap[0]?.lon);
 
-      // Step 2: Calculate bounding box around the coordinates
-      const earthRadius = 6371; // Earth's radius in kilometers
-      const radiusKm = radius * 1.60934; // Convert miles to kilometers
-      const latDegPerPixel = 360 / (2 * Math.PI * earthRadius);
-      const lonDegPerPixel = latDegPerPixel / Math.cos(latitude * (Math.PI / 180));
-      
-      const map_north = latitude + (radiusKm * latDegPerPixel);
-      const map_south = latitude - (radiusKm * latDegPerPixel);
-      const map_east = longitude + (radiusKm * lonDegPerPixel);
-      const map_west = longitude - (radiusKm * lonDegPerPixel);
+        const EARTH_RADIUS_MILES = 3958.8;
+        const DEGREE_TO_RADIAN = Math.PI / 180;
+        const RADIAN_TO_DEGREE = 180 / Math.PI;
+
+        const distanceInRadians = radius / EARTH_RADIUS_MILES;
+
+        // Convert latitude and longitude from degrees to radians
+        const latRad = latitude * DEGREE_TO_RADIAN;
+        const lonRad = longitude * DEGREE_TO_RADIAN;
+
+      const map_north = (latRad + distanceInRadians)*RADIAN_TO_DEGREE ;
+      const map_south = (latRad - distanceInRadians)*RADIAN_TO_DEGREE;
+      const map_east = (lonRad + distanceInRadians / Math.cos(latRad))*RADIAN_TO_DEGREE;
+      const map_west = (lonRad - distanceInRadians / Math.cos(latRad))*RADIAN_TO_DEGREE;
         /////////////////// End  ///////////////////////
         getDataButton.textContent="Searching"
-        const apiEndpointSale =`https://app.scrapeak.com/v1/scrapers/zillow/listing?api_key=${api_key}&url=https://www.zillow.com/${address}/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${address}%22%2C%22mapBounds%22%3A%7B%22west%22%3A${map_west}%2C%22east%22%3A${map_east}%2C%22south%22%3A${map_south}%2C%22north%22%3A${map_north}%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22lot%22%3A%7B%22min%22%3A${min_lot_size}%2C%22max%22%3A${max_lot_size}%7D%2C%22beds%22%3A%7B%22min%22%3A${min_bed}%2C%22max%22%3A${max_bed}%7D%2C%22baths%22%3A%7B%22min%22%3A${min_bath}%2C%22max%22%3A${max_bath}%7D%2C%22lotCoverage%22%3A%7B%22max%22%3A${max_lot_coverage}%7D` + (single_family ? '' : `%2C%22sf%22%3A%7B%22value%22%3Afalse%7D`) + (multi_family ? '' : `%2C%22mf%22%3A%7B%22value%22%3Afalse%7D`) + `%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%22${period}%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D`;
+        const apiEndpointSale =`https://app.scrapeak.com/v1/scrapers/zillow/listing?api_key=${api_key}&url=https://www.zillow.com/${address}/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${address}%22%2C%22mapBounds%22%3A%7B%22west%22%3A${map_west}%2C%22east%22%3A${map_east}%2C%22south%22%3A${map_south}%2C%22north%22%3A${map_north}%7D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22lot%22%3A%7B%22min%22%3A${min_lot_size}%2C%22max%22%3A${max_lot_size}%7D%2C%22beds%22%3A%7B%22min%22%3A${min_bed}%2C%22max%22%3A${max_bed}%7D%2C%22baths%22%3A%7B%22min%22%3A${min_bath}%2C%22max%22%3A${max_bath}%7D%2C%22lotCoverage%22%3A%7B%22max%22%3A${max_lot_coverage}%7D` + (single_family ? '' : `%2C%22sf%22%3A%7B%22value%22%3Afalse%7D`) + (multi_family ? '' : `%2C%22mf%22%3A%7B%22value%22%3Afalse%7D`) + `%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22doz%22%3A%7B%22value%22%3A%22${period}%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D`;
 
-        const apiEndpointSold =`https://app.scrapeak.com/v1/scrapers/zillow/listing?api_key=${api_key}&url=https://www.zillow.com/${address}/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${address}%22%2C%22mapBounds%22%3A%7B%22west%22%3A${map_west}%2C%22east%22%3A${map_east}%2C%22south%22%3A${map_south}%2C%22north%22%3A${map_north}%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22lot%22%3A%7B%22min%22%3A${min_lot_size}%2C%22max%22%3A${max_lot_size}%7D%2C%22beds%22%3A%7B%22min%22%3A${min_bed}%2C%22max%22%3A${max_bed}%7D%2C%22baths%22%3A%7B%22min%22%3A${min_bath}%2C%22max%22%3A${max_bath}%7D%2C%22lotCoverage%22%3A%7B%22max%22%3A${max_lot_coverage}%7D` + (single_family ? '' : `%2C%22sf%22%3A%7B%22value%22%3Afalse%7D`) + (multi_family ? '' : `%2C%22mf%22%3A%7B%22value%22%3Afalse%7D`) + `%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22rs%22%3A%7B%22value%22%3Atrue%7D%2C%22fsba%22%3A%7B%22value%22%3Afalse%7D%2C%22fsbo%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22cmsn%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%22${period}%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D`;
+        // const apiEndpointSold =`https://app.scrapeak.com/v1/scrapers/zillow/listing?api_key=${api_key}&url=https://www.zillow.com/${address}/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${address}%22%2C%22mapBounds%22%3A%7B%22west%22%3A${map_west}%2C%22east%22%3A${map_east}%2C%22south%22%3A${map_south}%2C%22north%22%3A${map_north}%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22lot%22%3A%7B%22min%22%3A${min_lot_size}%2C%22max%22%3A${max_lot_size}%7D%2C%22beds%22%3A%7B%22min%22%3A${min_bed}%2C%22max%22%3A${max_bed}%7D%2C%22baths%22%3A%7B%22min%22%3A${min_bath}%2C%22max%22%3A${max_bath}%7D%2C%22lotCoverage%22%3A%7B%22max%22%3A${max_lot_coverage}%7D` + (single_family ? '' : `%2C%22sf%22%3A%7B%22value%22%3Afalse%7D`) + (multi_family ? '' : `%2C%22mf%22%3A%7B%22value%22%3Afalse%7D`) + `%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%2C%22tow%22%3A%7B%22value%22%3Afalse%7D%2C%22con%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22apco%22%3A%7B%22value%22%3Afalse%7D%2C%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22rs%22%3A%7B%22value%22%3Atrue%7D%2C%22fsba%22%3A%7B%22value%22%3Afalse%7D%2C%22fsbo%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22cmsn%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%22${period}%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D`;
 
         try {
           const response = await fetch(apiEndpointSale);
           const data = await response.json();
-          const response1 = await fetch(apiEndpointSold);
-          const data1 = await response1.json();
-          averagesoldpricepersf = 0;
+          soldpricepersf = [];
           dayonzillow = [];
-          if ((data.data && data.data.cat1) || (data1.data && data1.data.cat1)) {
+          if (data.data && data.data.cat1)  {
             listResults = data.data.cat1.searchResults.relaxedResults.length> 0?data.data.cat1.searchResults.relaxedResults : data.data.cat1.searchResults.mapResults;
-            soldHouse = data1.data.cat1.searchResults.relaxedResults.length> 0?data1.data.cat1.searchResults.relaxedResults : data1.data.cat1.searchResults.listResults;
-            
-            soldHouse.map((item) => {
-              listResults.push(item);
-            })
-            console.log(listResults.map(item => item.hdpData?.homeInfo.price));
+            listResults = listResults.filter(item => item.hdpData?.homeInfo?.price );
+            if(listResults.length === 0) {
+                alert("Data Not Found");
+                hideData();
+                // return; // Return null if the array is empty
+              }
+            console.log(listResults.map(item => item.hdpData?.homeInfo.homeType));
             console.log(listResults);
-            listResults.sort((b, a) => a.hdpData.homeInfo.price - b.hdpData.homeInfo.price);
+          //  listResults.sort((b, a) => a.hdpData.homeInfo.price - b.hdpData.homeInfo.price);
             // Your data processing logic here
             // Fetch data from the API
             //Show Data Result and hide input
@@ -212,14 +214,13 @@
                 alert("Data not found");
                 return null; // Return null if the array is empty
               }
-              let targetPrice = records[0].hdpData.homeInfo.price;
+              let targetPrice = minOrMax === "max" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
               let targetProperty = records[0];
               for (let i = 1; i < records.length; i++) {
-                if (records[i].hasOwnProperty('unformattedPrice') && typeof records[i].hdpData.homeInfo.price === 'number') {
-                  if ((minOrMax === "maxsold" && records[i].hdpData.homeInfo.price > targetPrice && records[i].statusType === "SOLD") ||
-                  (minOrMax === "max" && records[i].hdpData.homeInfo.price > targetPrice ) ||
-                    (minOrMax === "min" && records[i].hdpData.homeInfo.price < targetPrice)) {
-                    targetPrice = records[i].hdpData.homeInfo.price;
+                if (records[i].hasOwnProperty('unformattedPrice') && typeof records[i].hdpData?.homeInfo.price === 'number') {
+                  if ( (minOrMax === "max" && records[i].hdpData?.homeInfo.price > targetPrice ) ||
+                    (minOrMax === "min" && records[i].hdpData?.homeInfo.price < targetPrice)) {
+                    targetPrice = records[i].hdpData?.homeInfo.price;
                     targetProperty = records[i];
                   }
                 }
@@ -236,43 +237,42 @@
               return null; // Return null if no number is found or if the conversion fails
             }
             //End Extract number from String Function
-            const maxSoldRecord = findPrice(listResults, "maxsold");
-            const maxRecord = findPrice(listResults, "max");
-            const minRecord = findPrice(listResults, "min");
-            const maxPrice = maxRecord?.hdpData.homeInfo.price || "N/A";
-            const minPrice = minRecord?.hdpData.homeInfo.price || "N/A";
-            const differenceSqftScale = (maxRecord.area || (maxRecord?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? maxRecord?.hdpData?.homeInfo.lotAreaValue : maxRecord?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0)) - (minRecord.area || (minRecord?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? minRecord?.hdpData?.homeInfo.lotAreaValue : minRecord?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0))  || "N/A";
+            const maxRecord = listResults[0];
+            const minRecord = listResults[listResults.length - 1];
+            const maxPrice = maxRecord?.hdpData?.homeInfo.price || "N/A";
+            const minPrice = minRecord?.hdpData?.homeInfo.price || "N/A";
+            const differenceSqftScale = ((maxRecord.area || (maxRecord?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? maxRecord?.hdpData?.homeInfo.lotAreaValue : maxRecord?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0)) - (minRecord.area || (minRecord?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? minRecord?.hdpData?.homeInfo.lotAreaValue : minRecord?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0)))  || "N/A";
             //const differenceSqftScale = '123'
             //Calculate mean
             function calculateMeanPrice(properties) {
               if (properties.length === 0) {
                 return null; // Return null if the array is empty
               }
-              const sum = properties.reduce((accumulator, property) => accumulator + property.hdpData.homeInfo.price, 0);
+              const sum = properties.reduce((accumulator, property) => accumulator + property.hdpData?.homeInfo?.price, 0);
               const meanPrice = sum / properties.length;
               return meanPrice.toFixed(0);
             }
-            const meanPrice = calculateMeanPrice(soldHouse);
+            const meanPrice = calculateMeanPrice(listResults.filter(item => item.hdpData?.homeInfo?.price));
             //Calculate Median
             function calculateMedianPrice(properties) {
               if (properties.length === 0) {
                 return null; // Return null if the array is empty
               }
-              const sortedPrices = properties.map(property => property.hdpData.homeInfo.price).sort((a, b) => a - b);
+              const sortedPrices = properties.map(property => property.hdpData?.homeInfo.price).sort((a, b) => a - b);
               const middleIndex = Math.floor(sortedPrices.length / 2);
               const medianPrice = sortedPrices.length % 2 === 0
                 ? (sortedPrices[middleIndex - 1] + sortedPrices[middleIndex]) / 2
                 : sortedPrices[middleIndex];
               return medianPrice;
             }
-            const medianPrice = calculateMedianPrice(soldHouse);
+            const medianPrice = calculateMedianPrice(listResults);
             // calculate potential profit per square foot
             function calculatePotentialProfit(property) {
               const costPrice = 90000; // Replace with the actual cost price
-              if (!property.hdpData.homeInfo.price || isNaN(property.hdpData.homeInfo.price) || property.area === null || isNaN(property.area)) {
+              if (!property.hdpData?.homeInfo.price || isNaN(property.hdpData?.homeInfo.price) || property.area === null || isNaN(property.area)) {
                 return null;
               }
-              const potentialProfit = property.hdpData.homeInfo.price - costPrice;
+              const potentialProfit = property.hdpData?.homeInfo.price - costPrice;
               return potentialProfit;
             }
             function calculateProfitPerSquareFoot(property) {
@@ -291,10 +291,10 @@
                 console.log(`Property ${property.zpid}: Data missing, cannot calculate profit per sqft`);
               }
             }
-            document.getElementById('button').innerText = "Where the Most Expensive Sold House : " + maxSoldRecord.address + ", Price is " + maxSoldRecord.hdpData.homeInfo.price + ".";
+            document.getElementById('button').innerText = "Where the Most Expensive House : " + maxRecord.address + ", Price is " + maxRecord.hdpData?.homeInfo.price + ".";
             document.getElementById('minprice').innerText = "The Cheapest House : " + minRecord.address + ', Difference between the highest is ' + (maxPrice - minPrice);
-            document.getElementById('mean').innerText = "Mean Price of Sold Houses: " + meanPrice;
-            document.getElementById('median').innerText = "Median Price of Sold Houses: " + medianPrice;
+            document.getElementById('mean').innerText = "Mean Price of Houses: " + meanPrice;
+            document.getElementById('median').innerText = "Median Price of Houses: " + medianPrice;
             document.getElementById('differenceSqftScale').innerText = "Difference Sqft Scale between the most expensive and the cheapeast(Potential Sq Footage)) : " + differenceSqftScale;
             ///Show data in table ////////////
             // Function to populate the table
@@ -321,23 +321,21 @@
                 const cell8 = row.insertCell(7);
                 cell1.innerHTML = property?.statusType || "N/A";
                 // cell2.innerHTML = property.imgSrc;
-                cell3.innerHTML = property.price || property.soldPrice || "N/A";
+                cell3.innerHTML = property.price || "N/A";
                 cell4.innerHTML = property.address || "N/A";
                // cell5.innerHTML = property.hdpData?.homeInfo?.lotAreaValue+" "+property.hdpData?.homeInfo?.lotAreaUnit || 'N/A';
                cell5.innerHTML = property.area || (property?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? property?.hdpData?.homeInfo.lotAreaValue : property?.hdpData?.homeInfo.lotAreaValue * 43560).toFixed(0) || 'N/A;'
                 cell6.innerHTML = property.variableData?.text || 'N/A';
                 cell7.innerHTML = (property.detailUrl.startsWith("/") ? ("https://www.zillow.com" + property.detailUrl) : property.detailUrl) || 'N/A';
-                const pricepersf = ((property.hdpData.homeInfo.price) / (property.area || (property?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? property?.hdpData?.homeInfo.lotAreaValue : property?.hdpData?.homeInfo.lotAreaValue * 43560))).toFixed(0);
-                averagesoldpricepersf += Number(pricepersf);
+                const pricepersf = ((property.hdpData?.homeInfo.price) / (property.area || (property?.hdpData?.homeInfo.lotAreaUnit === "sqft" ? property?.hdpData?.homeInfo.lotAreaValue : property?.hdpData?.homeInfo.lotAreaValue * 43560))).toFixed(0);
+                if(!isNaN(Number(pricepersf)) && Math.abs(Number(pricepersf)) != Infinity) soldpricepersf.push(Number(pricepersf));
                 if(property.timeOnZillow) dayonzillow.push(Number(property.timeOnZillow));
                 cell8.innerHTML =  pricepersf || 'N/A';
-                console.log(property.timeOnZillow);
               });
-              
-            averagesoldpricepersf /= data.length;
-            document.getElementById('averagesoldprice').innerText = "Average Sold Price per SQ Ft : " + (averagesoldpricepersf.toFixed(0) || 'N/A');
-            document.getElementById('averagedayonmarket').innerText = "Average days on market : " +  Math.floor(average(dayonzillow) / (1000 * 60 * 60 * 24))
-            document.getElementById('profitPerSquareFoot').innerText = "Potential profit per square foot : " + (averagesoldpricepersf.toFixed(0) - construction_cost_per_sqft);
+              console.log(soldpricepersf);
+            document.getElementById('averagesoldprice').innerText = "Average Sold Price per SQ Ft : " + (average(soldpricepersf).toFixed(0) || 'N/A');
+            document.getElementById('averagedayonmarket').innerText = "Average days on market : " +  (dayonzillow.length === 0 ? "N/A" : Math.floor(average(dayonzillow) / (1000 * 60 * 60 * 24)));
+            document.getElementById('profitPerSquareFoot').innerText = "Potential profit per square foot : " + (average(soldpricepersf).toFixed(0) - construction_cost_per_sqft);
 
             }
             // Call the function to populate the table
